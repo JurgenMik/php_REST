@@ -36,6 +36,41 @@ if ($method == 'GET') {
 
     mysqli_close($conn);
 
+} elseif ($method == 'POST') {
+
+    $data = file_get_contents('php://input');
+
+    $jsonData = json_decode($data);
+
+    $id = rand(100,500);
+    $email = $jsonData->email;
+    $first_name = $jsonData->first_name;
+    $last_name = $jsonData->last_name;
+    $avatar = $jsonData->avatar;
+
+    $date = date('d-m-y h:i:s');
+    // open .con to db
+
+    $conn = mysqli_connect("localhost","root","password","reqres_database")
+    or die ("Error " . mysqli_error($conn));
+
+    // db query
+    $sql ="INSERT INTO users (id, email, first_name, last_name, avatar) VALUES
+  ($id, '$email', '$first_name', '$last_name', '$avatar')";
+
+    if (mysqli_query($conn, $sql)) {
+
+        $mes = array("id"=>$id, "email"=>$email, "first_name"=>$first_name,
+            "last_name"=>$last_name, "avatar"=>$avatar, "createdAt"=>$date);
+
+        echo json_encode($mes, JSON_UNESCAPED_SLASHES);
+
+    } else {
+        echo "Could not create a new user";
+    }
+
+    mysqli_close($conn);
+
 } else {
     echo json_encode(
         array('message' => 'method unknown')
