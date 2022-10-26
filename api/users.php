@@ -4,39 +4,47 @@ header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=utf-8");
 header("Access-Control-Allow-Methods: GET,POST,PUT,DELETE");
 
+connect_db();
+function connect_db()
+{
+    global $db;
+
+    try {
+        $db = new mysqli('localhost', 'root', 'password', 'reqres_database');
+    } catch (Exception $e) {
+        $connection_error = mysqli_connect_error();
+        header($_SERVER['SERVER_PROTOCOL'] . ' 500 Internal Server Error', true, 500);
+        die();
+    }
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method == 'GET') {
 
-    $support = array('url'=>'https://reqres.in/#support-heading',
-        'text'=> 'To keep ReqRes free, contributions towards server costs are appreciated!');
-
-// open .con to db
-
-    $conn = mysqli_connect("localhost","root","password","reqres_database")
-    or die("Error " . mysqli_error($conn));
-
-// fetch from db
+    global $db;
 
     $sql = "SELECT * FROM users";
-    $result = mysqli_query($conn, $sql) or die("Error in Selecting"
-        . mysqli_error($conn));
+    $result = mysqli_query($db, $sql) or die("Error in Selecting"
+        . mysqli_error($db));
 
     $userArr = array();
     while ($row = mysqli_fetch_assoc($result))
     {
         $userArr[] = $row;
     }
+
+    $support = array('url'=>'https://reqres.in/#support-heading',
+        'text'=> 'To keep ReqRes free, contributions towards server costs are appreciated!');
+
     $mes = array('page'=> 1, 'per_page' => 6, 'total' => 12, 'total_pages' => 2,
         "data"=>$userArr, 'support'=>$support);
 
     echo json_encode($mes,JSON_UNESCAPED_SLASHES);
 
-// close db conn
-
-    mysqli_close($conn);
-
 } elseif ($method == 'POST') {
+
+    global $db;
 
     $data = file_get_contents('php://input');
 
@@ -49,16 +57,11 @@ if ($method == 'GET') {
     $avatar = $jsonData->avatar;
 
     $date = date('d-m-y h:i:s');
-    // open .con to db
 
-    $conn = mysqli_connect("localhost","root","password","reqres_database")
-    or die ("Error " . mysqli_error($conn));
-
-    // db query
     $sql ="INSERT INTO users (id, email, first_name, last_name, avatar) VALUES
   ($id, '$email', '$first_name', '$last_name', '$avatar')";
 
-    if (mysqli_query($conn, $sql)) {
+    if (mysqli_query($db, $sql)) {
 
         $mes = array("id"=>$id, "email"=>$email, "first_name"=>$first_name,
             "last_name"=>$last_name, "avatar"=>$avatar, "createdAt"=>$date);
@@ -69,8 +72,9 @@ if ($method == 'GET') {
         echo "Could not create a new user";
     }
 
-    mysqli_close($conn);
 } elseif ($method == 'PUT') {
+
+    global $db;
 
     $id = (int)$_GET['id'];
 
@@ -85,17 +89,10 @@ if ($method == 'GET') {
 
     $date = date('d-m-y h:i:s');
 
-    // open .con to db
-
-    $conn = mysqli_connect("localhost","root","password","reqres_database")
-    or die ("Error " . mysqli_error($conn));
-
-    // db query
-
     $sql = "UPDATE users SET email='$email', first_name='$first_name', 
    last_name = '$last_name', avatar = '$avatar' WHERE id = '$id'";
 
-    if (mysqli_query($conn, $sql)) {
+    if (mysqli_query($db, $sql)) {
 
         $mes = array("email"=>$email, "first_name"=>$first_name,
             "last_name"=>$last_name, "avatar"=>$avatar, "updatedAt"=>$date);
@@ -106,33 +103,28 @@ if ($method == 'GET') {
         header('HTTP/1.1 404 Not Found');
     }
 
-    mysqli_close($conn);
-
 } elseif ($method == 'DELETE') {
+
+    global $db;
 
     $id = (int)$_GET['id'];
 
-    // open .con to db
-
-    $conn = mysqli_connect("localhost","root","password","reqres_database")
-    or die ("Error " . mysqli_error($conn));
-
-    // db query
-
     $sql ="DELETE FROM users WHERE id='$id'";
 
-    if (mysqli_query($conn, $sql)) {
+    if (mysqli_query($db, $sql)) {
         http_response_code(204);
     } else {
         http_response_code(404);
     }
 
-    mysqli_close($conn);
-
 } else {
+
+    global $db;
+
     echo json_encode(
         array('message' => 'method unknown')
     );
+    mysqli_close($db);
 }
 
 ?>
