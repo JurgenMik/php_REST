@@ -70,6 +70,43 @@ if ($method == 'GET') {
     }
 
     mysqli_close($conn);
+} elseif ($method == 'PUT') {
+
+    $id = (int)$_GET['id'];
+
+    $data = file_get_contents('php://input');
+
+    $jsonData = json_decode($data);
+
+    $email = $jsonData->email;
+    $first_name = $jsonData->first_name;
+    $last_name = $jsonData->last_name;
+    $avatar = $jsonData->avatar;
+
+    $date = date('d-m-y h:i:s');
+
+    // open .con to db
+
+    $conn = mysqli_connect("localhost","root","password","reqres_database")
+    or die ("Error " . mysqli_error($conn));
+
+    // db query
+
+    $sql = "UPDATE users SET email='$email', first_name='$first_name', 
+   last_name = '$last_name', avatar = '$avatar' WHERE id = '$id'";
+
+    if (mysqli_query($conn, $sql)) {
+
+        $mes = array("email"=>$email, "first_name"=>$first_name,
+            "last_name"=>$last_name, "avatar"=>$avatar, "updatedAt"=>$date);
+
+        echo json_encode($mes, JSON_UNESCAPED_SLASHES);
+
+    } else {
+        header('HTTP/1.1 404 Not Found');
+    }
+
+    mysqli_close($conn);
 
 } else {
     echo json_encode(
