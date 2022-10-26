@@ -108,6 +108,27 @@ if ($method == 'GET') {
 
     mysqli_close($conn);
 
+} elseif ($method == 'DELETE') {
+
+    $id = (int)$_GET['id'];
+
+    // open .con to db
+
+    $conn = mysqli_connect("localhost","root","password","reqres_database")
+    or die ("Error " . mysqli_error($conn));
+
+    // db query
+
+    $sql ="DELETE FROM users WHERE id='$id'";
+
+    if (mysqli_query($conn, $sql)) {
+        http_response_code(204);
+    } else {
+        http_response_code(404);
+    }
+
+    mysqli_close($conn);
+
 } else {
     echo json_encode(
         array('message' => 'method unknown')
